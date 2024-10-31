@@ -4349,6 +4349,92 @@ mch_get_shellsize(void)
 }
 
 #if defined(FEAT_TERMINAL) || defined(PROTO)
+
+#if defined(TIOCSWINSZ)
+    int
+calc_x_font_size() {
+#if defined(FEAT_GUI)
+    if (!gui.in_use) {
+#endif
+      pid_t ppid = getppid();
+
+      // /proc/[親プロセスID]/fd/0 のパスを作成
+      char tty_path[256];
+      snprintf(tty_path, sizeof(tty_path), "/proc/%d/fd/0", ppid);
+
+      // シンボリックリンクから TTY デバイスのパスを取得
+      char actual_tty[256];
+      ssize_t len = readlink(tty_path, actual_tty, sizeof(actual_tty) - 1);
+      if (len == -1) {
+          return 5;
+      }
+      actual_tty[len] = '\0'; // 文字列の終端を追加
+
+      // TTY デバイスファイルをオープン
+      int tty_fd = open(tty_path, O_RDWR);
+      if (tty_fd == -1) {
+          return 5;
+      }
+
+      // ウィンドウサイズを取得するための構造体
+      struct winsize ws;
+      if (ioctl(tty_fd, TIOCGWINSZ, &ws) == -1) {
+          close(tty_fd);
+          return 5;
+      }
+
+      close(tty_fd);
+
+      return ws.ws_xpixel / ws.ws_col;
+#if defined(FEAT_GUI)
+    } else {
+      return 5;
+    }
+#endif
+}
+
+    int
+calc_y_font_size() {
+#if defined(FEAT_GUI)
+    if (!gui.in_use) {
+#endif
+      pid_t ppid = getppid();
+
+      // /proc/[親プロセスID]/fd/0 のパスを作成
+      char tty_path[256];
+      snprintf(tty_path, sizeof(tty_path), "/proc/%d/fd/0", ppid);
+
+      // シンボリックリンクから TTY デバイスのパスを取得
+      char actual_tty[256];
+      ssize_t len = readlink(tty_path, actual_tty, sizeof(actual_tty) - 1);
+      if (len == -1) {
+          return 10;
+      }
+      actual_tty[len] = '\0'; // 文字列の終端を追加
+
+      // TTY デバイスファイルをオープン
+      int tty_fd = open(tty_path, O_RDWR);
+      if (tty_fd == -1) {
+          return 10;
+      }
+
+      // ウィンドウサイズを取得するための構造体
+      struct winsize ws;
+      if (ioctl(tty_fd, TIOCGWINSZ, &ws) == -1) {
+          return 10;
+      }
+
+      close(tty_fd);
+
+      return ws.ws_ypixel / ws.ws_row;
+#if defined(FEAT_GUI)
+    } else {
+      return 10;
+    }
+#endif
+}
+#endif
+
 /*
  * Report the windows size "rows" and "cols" to tty "fd".
  */
@@ -4367,8 +4453,8 @@ mch_report_winsize(int fd, int rows, int cols)
 
     ws.ws_col = cols;
     ws.ws_row = rows;
-    ws.ws_xpixel = cols * 5;
-    ws.ws_ypixel = rows * 10;
+    ws.ws_xpixel = cols * calc_x_font_size();
+    ws.ws_ypixel = rows * calc_y_font_size();
     retval = ioctl(tty_fd, TIOCSWINSZ, &ws);
     ch_log(NULL, "ioctl(TIOCSWINSZ) %s", retval == 0 ? "success" : "failed");
 # elif defined(TIOCSSIZE)
@@ -4384,6 +4470,7 @@ mch_report_winsize(int fd, int rows, int cols)
     return retval == 0 ? OK : FAIL;
 }
 #endif
+
 
 /*
  * Try to set the window size to Rows and Columns.
