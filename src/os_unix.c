@@ -4356,13 +4356,13 @@ calc_xy_pixel_size(struct winsize *ws_out) {
 #if defined(FEAT_GUI)
     if (!gui.in_use) {
 #endif
+      // get parent process pid.
       pid_t ppid = getppid();
 
-      // /proc/[親プロセスID]/fd/0 のパスを作成
+      // get parent process's tty path.
       char tty_path[256];
       snprintf(tty_path, sizeof(tty_path), "/proc/%d/fd/0", ppid);
 
-      // シンボリックリンクから TTY デバイスのパスを取得
       char actual_tty[256];
       ssize_t len = readlink(tty_path, actual_tty, sizeof(actual_tty) - 1);
       if (len == -1) {
@@ -4370,9 +4370,9 @@ calc_xy_pixel_size(struct winsize *ws_out) {
           ws_out->ws_ypixel = ws_out->ws_row * 10;
           return;
       }
-      actual_tty[len] = '\0'; // 文字列の終端を追加
+      actual_tty[len] = '\0';
 
-      // TTY デバイスファイルをオープン
+      // open parent process's tty.
       int tty_fd = open(tty_path, O_RDWR);
       if (tty_fd == -1) {
           ws_out->ws_xpixel = ws_out->ws_col * 5;
@@ -4380,7 +4380,7 @@ calc_xy_pixel_size(struct winsize *ws_out) {
           return;
       }
 
-      // ウィンドウサイズを取得するための構造体
+      // get parent tty size.
       struct winsize ws;
       if (ioctl(tty_fd, TIOCGWINSZ, &ws) == -1) {
           ws_out->ws_xpixel = ws_out->ws_col * 5;
@@ -4390,9 +4390,11 @@ calc_xy_pixel_size(struct winsize *ws_out) {
 
       close(tty_fd);
 
+      // calculate parent tty's pixel per font.
       int x_font_size = ws.ws_xpixel / ws.ws_col;
       int y_font_size = ws.ws_ypixel / ws.ws_row;
 
+      // calculate current tty's pixel
       ws_out->ws_xpixel = ws_out->ws_col * x_font_size;
       ws_out->ws_ypixel = ws_out->ws_row * y_font_size;
 #if defined(FEAT_GUI)
@@ -4422,7 +4424,10 @@ mch_report_winsize(int fd, int rows, int cols)
 
     ws.ws_col = cols;
     ws.ws_row = rows;
+
+    // calcurate and set tty pixel size
     calc_xy_pixel_size(&ws);
+
     retval = ioctl(tty_fd, TIOCSWINSZ, &ws);
     ch_log(NULL, "ioctl(TIOCSWINSZ) %s", retval == 0 ? "success" : "failed");
 # elif defined(TIOCSSIZE)
@@ -4438,7 +4443,6 @@ mch_report_winsize(int fd, int rows, int cols)
     return retval == 0 ? OK : FAIL;
 }
 #endif
-
 
 /*
  * Try to set the window size to Rows and Columns.
