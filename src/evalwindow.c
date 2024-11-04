@@ -400,10 +400,6 @@ get_winnr(tabpage_T *tp, typval_T *argvar)
 /*
  * Returns information about a window as a dictionary.
  */
-struct fontsize {
-    unsigned int fs_xpixel;
-    unsigned int fs_ypixel;
-};
     static dict_T *
 get_win_info(win_T *wp, short tpnr, short winnr)
 {
@@ -413,14 +409,15 @@ get_win_info(win_T *wp, short tpnr, short winnr)
     if (dict == NULL)
 	return NULL;
 
-// TODO: ifdef UNIX みたいなものがある？
+# if defined(UNIX) || defined(VMS)
+    struct fontsize fs;
 #ifdef FEAT_GUI
     if (!gui.in_use) {
 #endif
-	struct fontsize fs;
 	calc_font_size(&fs);
 #ifdef FEAT_GUI
     }
+#endif
 #endif
 
     // make sure w_botline is valid
@@ -430,13 +427,14 @@ get_win_info(win_T *wp, short tpnr, short winnr)
     dict_add_number(dict, "winnr", winnr);
     dict_add_number(dict, "winid", wp->w_id);
     dict_add_number(dict, "height", wp->w_height);
+# if defined(UNIX) || defined(VMS)
 #ifdef FEAT_GUI
     if (!gui.in_use) {
 #endif
 	dict_add_number(dict, "height_pixel", fs.fs_ypixel * wp->w_height);
-	dict_add_number(dict, "font_y_pixel", fs.fs_ypixel);
 #ifdef FEAT_GUI
     }
+#endif
 #endif
     dict_add_number(dict, "winrow", wp->w_winrow + 1);
     dict_add_number(dict, "topline", wp->w_topline);
@@ -445,13 +443,14 @@ get_win_info(win_T *wp, short tpnr, short winnr)
     dict_add_number(dict, "winbar", wp->w_winbar_height);
 #endif
     dict_add_number(dict, "width", wp->w_width);
+# if defined(UNIX) || defined(VMS)
 #ifdef FEAT_GUI
     if (!gui.in_use) {
 #endif
 	dict_add_number(dict, "width_pixel", fs.fs_xpixel * wp->w_width);
-	dict_add_number(dict, "font_x_size", fs.fs_xpixel);
 #ifdef FEAT_GUI
     }
+#endif
 #endif
     dict_add_number(dict, "wincol", wp->w_wincol + 1);
     dict_add_number(dict, "textoff", win_col_off(wp));

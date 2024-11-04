@@ -488,3 +488,14 @@ int mch_rename(const char *src, const char *dest);
 
 // We have three kinds of ACL support.
 #define HAVE_ACL (HAVE_POSIX_ACL || HAVE_SOLARIS_ACL || HAVE_AIX_ACL)
+
+# if defined(UNIX) || defined(VMS)
+struct fontsize {
+
+    unsigned int fs_xpixel;
+    unsigned int fs_ypixel;
+};
+
+void calc_font_size(struct fontsize *fs_out);
+#endif
+

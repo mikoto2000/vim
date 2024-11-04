@@ -4351,10 +4351,6 @@ mch_get_shellsize(void)
 #if defined(FEAT_TERMINAL) || defined(PROTO)
 
 #if defined(TIOCSWINSZ)
-struct fontsize {
-    unsigned int fs_xpixel;
-    unsigned int fs_ypixel;
-};
     void
 calc_font_size(struct fontsize *fs_out) {
 #if defined(FEAT_GUI)
@@ -8836,4 +8832,3 @@ start_timeout(long msec)
 }
 # endif // PROF_NSEC
 #endif  // FEAT_RELTIME
-
