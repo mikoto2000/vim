@@ -4352,55 +4352,71 @@ mch_get_shellsize(void)
 
 #if defined(TIOCSWINSZ)
 struct fontsize {
-    unsigned short fs_xpixel;
-    unsigned short fs_ypixel;
+    unsigned int fs_xpixel;
+    unsigned int fs_ypixel;
 };
     void
 calc_font_size(struct fontsize *fs_out) {
 #if defined(FEAT_GUI)
     if (!gui.in_use) {
 #endif
-      // get parent process pid.
-      pid_t ppid = getppid();
+        struct termios orig_termios, new_termios;
 
-      // get parent process's tty path.
-      char tty_path[256];
-      snprintf(tty_path, sizeof(tty_path), "/proc/%d/fd/0", ppid);
+        // 端末設定を取得し、非標準モードに変更
+        tcgetattr(STDIN_FILENO, &orig_termios);
+        new_termios = orig_termios;
+        new_termios.c_lflag &= ~(ICANON | ECHO);
+        tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
 
-      char actual_tty[256];
-      ssize_t len = readlink(tty_path, actual_tty, sizeof(actual_tty) - 1);
-      if (len == -1) {
-          fs_out->fs_xpixel = 5;
-          fs_out->fs_ypixel = 10;
-          return;
-      }
-      actual_tty[len] = '\0';
+        //  セルサイズ取得エスケープシーケンスを送信
+        fprintf(stdout, "\x1b[18t");
+        fflush(stdout);
 
-      // open parent process's tty.
-      int tty_fd = open(tty_path, O_RDWR);
-      if (tty_fd == -1) {
-          fs_out->fs_xpixel = 5;
-          fs_out->fs_ypixel = 10;
-          return;
-      }
+        // 応答を読み込む
+        char buf[64];
+        unsigned int rows, cols;
+        if (read(STDIN_FILENO, buf, sizeof(buf)) > 0) {
+            // 応答を解析
+            if (sscanf(buf, "\x1b[8;%u;%ut", &rows, &cols) != 2) {
+                fs_out->fs_xpixel = 5;
+                fs_out->fs_ypixel = 10;
+                return;
+            }
+        } else {
+            fs_out->fs_xpixel = 5;
+            fs_out->fs_ypixel = 10;
+            return;
+        }
 
-      // get parent tty size.
-      struct winsize ws;
-      if (ioctl(tty_fd, TIOCGWINSZ, &ws) == -1) {
-          fs_out->fs_xpixel = 5;
-          fs_out->fs_ypixel = 10;
-          return;
-      }
+        //  ピクセルサイズ取得エスケープシーケンスを送信
+        fprintf(stdout, "\x1b[14t");
+        fflush(stdout);
 
-      close(tty_fd);
+        // 応答を読み込む
+        unsigned int y_pixel, x_pixel;
+        if (read(STDIN_FILENO, buf, sizeof(buf)) > 0) {
+            // 応答を解析
+            if (sscanf(buf, "\x1b[4;%u;%ut", &y_pixel, &x_pixel) != 2) {
+                fs_out->fs_xpixel = 5;
+                fs_out->fs_ypixel = 10;
+                return;
+            }
+        } else {
+            fs_out->fs_xpixel = 5;
+            fs_out->fs_ypixel = 10;
+            return;
+        }
 
-      // calculate parent tty's pixel per font.
-      int x_font_size = ws.ws_xpixel / ws.ws_col;
-      int y_font_size = ws.ws_ypixel / ws.ws_row;
+        // 端末設定を元に戻す
+        tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
 
-      // calculate current tty's pixel
-      fs_out->fs_xpixel = x_font_size;
-      fs_out->fs_ypixel = y_font_size;
+        // calculate parent tty's pixel per font.
+        int x_font_size = x_pixel / cols;
+        int y_font_size = y_pixel / rows;
+
+        // calculate current tty's pixel
+        fs_out->fs_xpixel = x_font_size;
+        fs_out->fs_ypixel = y_font_size;
 #if defined(FEAT_GUI)
     } else {
         fs_out->fs_xpixel = 5;
@@ -8820,3 +8836,4 @@ start_timeout(long msec)
 }
 # endif // PROF_NSEC
 #endif  // FEAT_RELTIME
+

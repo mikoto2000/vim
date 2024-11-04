@@ -401,8 +401,8 @@ get_winnr(tabpage_T *tp, typval_T *argvar)
  * Returns information about a window as a dictionary.
  */
 struct fontsize {
-    unsigned short fs_xpixel;
-    unsigned short fs_ypixel;
+    unsigned int fs_xpixel;
+    unsigned int fs_ypixel;
 };
     static dict_T *
 get_win_info(win_T *wp, short tpnr, short winnr)
@@ -434,6 +434,7 @@ get_win_info(win_T *wp, short tpnr, short winnr)
     if (!gui.in_use) {
 #endif
 	dict_add_number(dict, "height_pixel", fs.fs_ypixel * wp->w_height);
+	dict_add_number(dict, "font_y_pixel", fs.fs_ypixel);
 #ifdef FEAT_GUI
     }
 #endif
@@ -448,6 +449,7 @@ get_win_info(win_T *wp, short tpnr, short winnr)
     if (!gui.in_use) {
 #endif
 	dict_add_number(dict, "width_pixel", fs.fs_xpixel * wp->w_width);
+	dict_add_number(dict, "font_x_size", fs.fs_xpixel);
 #ifdef FEAT_GUI
     }
 #endif
