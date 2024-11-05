@@ -491,7 +491,6 @@ int mch_rename(const char *src, const char *dest);
 
 # if defined(UNIX) || defined(VMS)
 struct cellsize {
-
     unsigned int cs_xpixel;
     unsigned int cs_ypixel;
 };

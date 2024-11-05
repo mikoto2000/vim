@@ -4355,7 +4355,8 @@ mch_get_shellsize(void)
     void
 calc_cell_size(struct cellsize *cs_out) {
 #if defined(FEAT_GUI)
-    if (!gui.in_use) {
+    if (!gui.in_use)
+    {
 #endif
         struct termios orig_termios, new_termios;
 
@@ -4366,13 +4367,17 @@ calc_cell_size(struct cellsize *cs_out) {
         // read CSI response
         char buf[64];
         unsigned int rows, cols;
-        if (read(STDIN_FILENO, buf, sizeof(buf)) > 0) {
-            if (sscanf(buf, "\x1b[8;%u;%ut", &rows, &cols) != 2) {
+        if (read(STDIN_FILENO, buf, sizeof(buf)) > 0)
+        {
+            if (sscanf(buf, "\x1b[8;%u;%ut", &rows, &cols) != 2)
+            {
                 cs_out->cs_xpixel = 5;
                 cs_out->cs_ypixel = 10;
                 return;
             }
-        } else {
+        }
+        else
+        {
             cs_out->cs_xpixel = 5;
             cs_out->cs_ypixel = 10;
             return;
@@ -4384,13 +4389,17 @@ calc_cell_size(struct cellsize *cs_out) {
 
         // read CSI response
         unsigned int y_pixel, x_pixel;
-        if (read(STDIN_FILENO, buf, sizeof(buf)) > 0) {
-            if (sscanf(buf, "\x1b[4;%u;%ut", &y_pixel, &x_pixel) != 2) {
+        if (read(STDIN_FILENO, buf, sizeof(buf)) > 0)
+        {
+            if (sscanf(buf, "\x1b[4;%u;%ut", &y_pixel, &x_pixel) != 2)
+            {
                 cs_out->cs_xpixel = 5;
                 cs_out->cs_ypixel = 10;
                 return;
             }
-        } else {
+        }
+        else
+        {
             cs_out->cs_xpixel = 5;
             cs_out->cs_ypixel = 10;
             return;
@@ -4404,7 +4413,9 @@ calc_cell_size(struct cellsize *cs_out) {
         cs_out->cs_xpixel = x_cell_size;
         cs_out->cs_ypixel = y_cell_size;
 #if defined(FEAT_GUI)
-    } else {
+    }
+    else
+    {
         cs_out->cs_xpixel = 5;
         cs_out->cs_ypixel = 10;
     }
@@ -4412,7 +4423,6 @@ calc_cell_size(struct cellsize *cs_out) {
 }
 
 #if defined(FEAT_TERMINAL) || defined(PROTO)
-
 /*
  * Report the windows size "rows" and "cols" to tty "fd".
  */

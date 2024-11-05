@@ -412,9 +412,10 @@ get_win_info(win_T *wp, short tpnr, short winnr)
 # if defined(UNIX) || defined(VMS)
     struct cellsize cs;
 #ifdef FEAT_GUI
-    if (!gui.in_use) {
+    if (!gui.in_use)
+    {
 #endif
-	calc_cell_size(&cs);
+        calc_cell_size(&cs);
 #ifdef FEAT_GUI
     }
 #endif
@@ -429,9 +430,10 @@ get_win_info(win_T *wp, short tpnr, short winnr)
     dict_add_number(dict, "height", wp->w_height);
 # if defined(UNIX) || defined(VMS)
 #ifdef FEAT_GUI
-    if (!gui.in_use) {
+    if (!gui.in_use)
+    {
 #endif
-	dict_add_number(dict, "hpixel", cs.cs_ypixel * wp->w_height);
+        dict_add_number(dict, "hpixel", cs.cs_ypixel * wp->w_height);
 #ifdef FEAT_GUI
     }
 #endif
@@ -445,9 +447,10 @@ get_win_info(win_T *wp, short tpnr, short winnr)
     dict_add_number(dict, "width", wp->w_width);
 # if defined(UNIX) || defined(VMS)
 #ifdef FEAT_GUI
-    if (!gui.in_use) {
+    if (!gui.in_use)
+    {
 #endif
-	dict_add_number(dict, "wpixel", cs.cs_xpixel * wp->w_width);
+        dict_add_number(dict, "wpixel", cs.cs_xpixel * wp->w_width);
 #ifdef FEAT_GUI
     }
 #endif
