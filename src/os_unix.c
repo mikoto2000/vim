@@ -4360,9 +4360,18 @@ calc_cell_size(struct cellsize *cs_out) {
 #endif
         struct termios orig_termios, new_termios;
 
+        // save termios
+        tcgetattr(0, &orig_termios);
+        new_termios = orig_termios;
+
+        // set to noncanonical mode and echo off
+        new_termios.c_lflag &= ~(ICANON | ECHO);
+        new_termios.c_cc[VMIN] = 1;
+        new_termios.c_cc[VTIME] = 5;
+        tcsetattr(0, TCSANOW, &new_termios);
+
         // send CSI P18 sequence. (get terminal row and col size)
-        fprintf(stdout, "\x1b[18t");
-        fflush(stdout);
+        write(STDOUT_FILENO, "\x1b[18t", 5);
 
         // read CSI response
         char buf[64];
@@ -4373,6 +4382,8 @@ calc_cell_size(struct cellsize *cs_out) {
             {
                 cs_out->cs_xpixel = 5;
                 cs_out->cs_ypixel = 10;
+        // restore termios
+        tcsetattr(0, TCSANOW, &orig_termios);
                 return;
             }
         }
@@ -4380,12 +4391,13 @@ calc_cell_size(struct cellsize *cs_out) {
         {
             cs_out->cs_xpixel = 5;
             cs_out->cs_ypixel = 10;
+        // restore termios
+        tcsetattr(0, TCSANOW, &orig_termios);
             return;
         }
 
         // send CSI P14 sequence. (get terminal width and height pixel size)
-        fprintf(stdout, "\x1b[14t");
-        fflush(stdout);
+        write(STDOUT_FILENO, "\x1b[14t", 5);
 
         // read CSI response
         unsigned int y_pixel, x_pixel;
@@ -4395,6 +4407,8 @@ calc_cell_size(struct cellsize *cs_out) {
             {
                 cs_out->cs_xpixel = 5;
                 cs_out->cs_ypixel = 10;
+        // restore termios
+        tcsetattr(0, TCSANOW, &orig_termios);
                 return;
             }
         }
@@ -4402,8 +4416,13 @@ calc_cell_size(struct cellsize *cs_out) {
         {
             cs_out->cs_xpixel = 5;
             cs_out->cs_ypixel = 10;
+        // restore termios
+        tcsetattr(0, TCSANOW, &orig_termios);
             return;
         }
+
+        // restore termios
+        tcsetattr(0, TCSANOW, &orig_termios);
 
         // calculate parent tty's pixel per cell.
         int x_cell_size = x_pixel / cols;
