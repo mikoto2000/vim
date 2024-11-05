@@ -4348,11 +4348,8 @@ mch_get_shellsize(void)
     return OK;
 }
 
-#if defined(FEAT_TERMINAL) || defined(PROTO)
-
-#if defined(TIOCSWINSZ)
     void
-calc_font_size(struct fontsize *fs_out) {
+calc_cell_size(struct cellsize *cs_out) {
 #if defined(FEAT_GUI)
     if (!gui.in_use) {
 #endif
@@ -4374,13 +4371,13 @@ calc_font_size(struct fontsize *fs_out) {
         if (read(STDIN_FILENO, buf, sizeof(buf)) > 0) {
             // 応答を解析
             if (sscanf(buf, "\x1b[8;%u;%ut", &rows, &cols) != 2) {
-                fs_out->fs_xpixel = 5;
-                fs_out->fs_ypixel = 10;
+                cs_out->cs_xpixel = 5;
+                cs_out->cs_ypixel = 10;
                 return;
             }
         } else {
-            fs_out->fs_xpixel = 5;
-            fs_out->fs_ypixel = 10;
+            cs_out->cs_xpixel = 5;
+            cs_out->cs_ypixel = 10;
             return;
         }
 
@@ -4393,34 +4390,35 @@ calc_font_size(struct fontsize *fs_out) {
         if (read(STDIN_FILENO, buf, sizeof(buf)) > 0) {
             // 応答を解析
             if (sscanf(buf, "\x1b[4;%u;%ut", &y_pixel, &x_pixel) != 2) {
-                fs_out->fs_xpixel = 5;
-                fs_out->fs_ypixel = 10;
+                cs_out->cs_xpixel = 5;
+                cs_out->cs_ypixel = 10;
                 return;
             }
         } else {
-            fs_out->fs_xpixel = 5;
-            fs_out->fs_ypixel = 10;
+            cs_out->cs_xpixel = 5;
+            cs_out->cs_ypixel = 10;
             return;
         }
 
         // 端末設定を元に戻す
         tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
 
-        // calculate parent tty's pixel per font.
-        int x_font_size = x_pixel / cols;
-        int y_font_size = y_pixel / rows;
+        // calculate parent tty's pixel per cell.
+        int x_cell_size = x_pixel / cols;
+        int y_cell_size = y_pixel / rows;
 
         // calculate current tty's pixel
-        fs_out->fs_xpixel = x_font_size;
-        fs_out->fs_ypixel = y_font_size;
+        cs_out->cs_xpixel = x_cell_size;
+        cs_out->cs_ypixel = y_cell_size;
 #if defined(FEAT_GUI)
     } else {
-        fs_out->fs_xpixel = 5;
-        fs_out->fs_ypixel = 10;
+        cs_out->cs_xpixel = 5;
+        cs_out->cs_ypixel = 10;
     }
 #endif
 }
-#endif
+
+#if defined(FEAT_TERMINAL) || defined(PROTO)
 
 /*
  * Report the windows size "rows" and "cols" to tty "fd".
@@ -4442,10 +4440,10 @@ mch_report_winsize(int fd, int rows, int cols)
     ws.ws_row = rows;
 
     // calcurate and set tty pixel size
-    struct fontsize fs;
-    calc_font_size(&fs);
-    ws.ws_xpixel = cols * fs.fs_xpixel;
-    ws.ws_ypixel = rows * fs.fs_ypixel;
+    struct cellsize cs;
+    calc_cell_size(&cs);
+    ws.ws_xpixel = cols * cs.cs_xpixel;
+    ws.ws_ypixel = rows * cs.cs_ypixel;
 
     retval = ioctl(tty_fd, TIOCSWINSZ, &ws);
     ch_log(NULL, "ioctl(TIOCSWINSZ) %s", retval == 0 ? "success" : "failed");

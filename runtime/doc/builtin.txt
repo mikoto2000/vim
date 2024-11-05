@@ -5071,7 +5071,7 @@ getwininfo([{winid}])					*getwininfo()*
 			botline		last complete displayed buffer line
 			bufnr		number of buffer in the window
 			height		window height (excluding winbar)
-			height_pixel	window height of pixel-level
+			hpixel		window height of pixel-level
 					{only with UNIX build}
 			loclist		1 if showing a location list
 					{only with the +quickfix feature}
@@ -5084,7 +5084,7 @@ getwininfo([{winid}])					*getwininfo()*
 			variables	a reference to the dictionary with
 					window-local variables
 			width		window width
-			width_pixel	window width of pixel-level
+			wpixel		window width of pixel-level
 					{only with UNIX build}
 			winbar		1 if the window has a toolbar, 0
 					otherwise
