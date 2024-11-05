@@ -4348,6 +4348,10 @@ mch_get_shellsize(void)
     return OK;
 }
 
+/*
+ * Try to get the current terminal cell size.
+ * If faile get cell size, fallback 5x10 pixel.
+ */
     void
 calc_cell_size(struct cellsize *cs_out) {
 #if defined(FEAT_GUI)
@@ -4355,21 +4359,14 @@ calc_cell_size(struct cellsize *cs_out) {
 #endif
         struct termios orig_termios, new_termios;
 
-        // 端末設定を取得し、非標準モードに変更
-        tcgetattr(STDIN_FILENO, &orig_termios);
-        new_termios = orig_termios;
-        new_termios.c_lflag &= ~(ICANON | ECHO);
-        tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
-
-        //  セルサイズ取得エスケープシーケンスを送信
+        // send CSI P18 sequence. (get terminal row and col size)
         fprintf(stdout, "\x1b[18t");
         fflush(stdout);
 
-        // 応答を読み込む
+        // read CSI response
         char buf[64];
         unsigned int rows, cols;
         if (read(STDIN_FILENO, buf, sizeof(buf)) > 0) {
-            // 応答を解析
             if (sscanf(buf, "\x1b[8;%u;%ut", &rows, &cols) != 2) {
                 cs_out->cs_xpixel = 5;
                 cs_out->cs_ypixel = 10;
@@ -4381,14 +4378,13 @@ calc_cell_size(struct cellsize *cs_out) {
             return;
         }
 
-        //  ピクセルサイズ取得エスケープシーケンスを送信
+        // send CSI P14 sequence. (get terminal width and height pixel size)
         fprintf(stdout, "\x1b[14t");
         fflush(stdout);
 
-        // 応答を読み込む
+        // read CSI response
         unsigned int y_pixel, x_pixel;
         if (read(STDIN_FILENO, buf, sizeof(buf)) > 0) {
-            // 応答を解析
             if (sscanf(buf, "\x1b[4;%u;%ut", &y_pixel, &x_pixel) != 2) {
                 cs_out->cs_xpixel = 5;
                 cs_out->cs_ypixel = 10;
@@ -4399,9 +4395,6 @@ calc_cell_size(struct cellsize *cs_out) {
             cs_out->cs_ypixel = 10;
             return;
         }
-
-        // 端末設定を元に戻す
-        tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
 
         // calculate parent tty's pixel per cell.
         int x_cell_size = x_pixel / cols;
