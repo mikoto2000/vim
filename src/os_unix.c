@@ -4382,8 +4382,8 @@ calc_cell_size(struct cellsize *cs_out) {
             {
                 cs_out->cs_xpixel = 5;
                 cs_out->cs_ypixel = 10;
-        // restore termios
-        tcsetattr(0, TCSANOW, &orig_termios);
+                // restore termios
+                tcsetattr(0, TCSANOW, &orig_termios);
                 return;
             }
         }
@@ -4391,8 +4391,8 @@ calc_cell_size(struct cellsize *cs_out) {
         {
             cs_out->cs_xpixel = 5;
             cs_out->cs_ypixel = 10;
-        // restore termios
-        tcsetattr(0, TCSANOW, &orig_termios);
+            // restore termios
+            tcsetattr(0, TCSANOW, &orig_termios);
             return;
         }
 
@@ -4407,8 +4407,8 @@ calc_cell_size(struct cellsize *cs_out) {
             {
                 cs_out->cs_xpixel = 5;
                 cs_out->cs_ypixel = 10;
-        // restore termios
-        tcsetattr(0, TCSANOW, &orig_termios);
+                // restore termios
+                tcsetattr(0, TCSANOW, &orig_termios);
                 return;
             }
         }
@@ -4416,8 +4416,8 @@ calc_cell_size(struct cellsize *cs_out) {
         {
             cs_out->cs_xpixel = 5;
             cs_out->cs_ypixel = 10;
-        // restore termios
-        tcsetattr(0, TCSANOW, &orig_termios);
+            // restore termios
+            tcsetattr(0, TCSANOW, &orig_termios);
             return;
         }
 
