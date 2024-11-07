@@ -4353,7 +4353,8 @@ mch_get_shellsize(void)
  * If faile get cell size, fallback 5x10 pixel.
  */
     void
-calc_cell_size(struct cellsize *cs_out) {
+calc_cell_size(struct cellsize *cs_out)
+{
 #if defined(FEAT_GUI)
     if (!gui.in_use)
     {
