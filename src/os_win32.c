@@ -9050,3 +9050,54 @@ start_timeout(long msec)
     return timeout_flag;
 }
 #endif
+
+#if defined(FEAT_EVAL) || defined(PROTO)
+    void
+f_getcellpixels(typval_T *argvars UNUSED, typval_T *rettv)
+{
+    struct cellsize cs;
+    mch_calc_cell_size(&cs);
+
+    if (rettv_list_alloc(rettv) == FAIL)
+        return;
+
+    list_append_number(rettv->vval.v_list, (varnumber_T)cs.cs_xpixel);
+    list_append_number(rettv->vval.v_list, (varnumber_T)cs.cs_ypixel);
+}
+#endif
+
+/*
+ * Try to get the current terminal cell size.
+ * If faile get cell size, fallback 5x10 pixel.
+ */
+    void
+mch_calc_cell_size(struct cellsize *cs_out)
+{
+#if defined(FEAT_GUI)
+    if (!gui.in_use)
+    {
+#endif
+
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_FONT_INFO info;
+    if (GetCurrentConsoleFont(console, FALSE, &info))
+    {
+        cs_out->cs_xpixel = info.dwFontSize.X;
+        cs_out->cs_ypixel = info.dwFontSize.Y;
+    }
+    else
+    {
+        cs_out->cs_xpixel = -1;
+        cs_out->cs_ypixel = -1;
+    }
+
+#if defined(FEAT_GUI)
+    }
+    else
+    {
+        cs_out->cs_xpixel = -1;
+        cs_out->cs_ypixel = -1;
+    }
+#endif
+}
+

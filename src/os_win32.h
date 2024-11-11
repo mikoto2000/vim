@@ -229,3 +229,9 @@ Trace(char *pszFormat, ...);
 #endif
 #define mch_getenv(x) (char_u *)getenv((char *)(x))
 #define vim_mkdir(x, y) mch_mkdir(x)
+
+struct cellsize {
+    unsigned int cs_xpixel;
+    unsigned int cs_ypixel;
+};
+
