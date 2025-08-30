@@ -85,7 +85,9 @@ static void f_haslocaldir(typval_T *argvars, typval_T *rettv);
 static void f_hlID(typval_T *argvars, typval_T *rettv);
 static void f_hlexists(typval_T *argvars, typval_T *rettv);
 static void f_hostname(typval_T *argvars, typval_T *rettv);
+#ifdef HAVE_LIBCURL
 static void f_httprequest(typval_T *argvars, typval_T *rettv);
+#endif
 static void f_id(typval_T *argvars, typval_T *rettv);
 static void f_index(typval_T *argvars, typval_T *rettv);
 static void f_indexof(typval_T *argvars, typval_T *rettv);
@@ -2419,8 +2421,10 @@ static const funcentry_T global_functions[] =
 			ret_number_bool,    f_hlset},
     {"hostname",	0, 0, 0,	    NULL,
 			ret_string,	    f_hostname},
+#ifdef HAVE_LIBCURL
     {"httprequest",	3, 4, FEARG_1,	    arg4_httprequest,
 			ret_maparg,	    f_httprequest},
+#endif
     {"iconv",		3, 3, FEARG_1,	    arg3_string,
 			ret_string,	    f_iconv},
     {"id",		1, 1, FEARG_1,	    NULL,
@@ -12814,6 +12818,7 @@ f_xor(typval_T *argvars, typval_T *rettv)
 					^ tv_get_number_chk(&argvars[1], NULL);
 }
 
+#ifdef HAVE_LIBCURL
 struct Memory {
     char *response;
     size_t size;
@@ -12977,5 +12982,6 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 	}
     }
 }
+#endif // HAVE_LIBCURL
 
 #endif // FEAT_EVAL

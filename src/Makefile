@@ -1383,6 +1383,7 @@ ALL_LIBS = \
 	   $(GUI_LIBS2) \
 	   $(X_PRE_LIBS) \
 	   $(X_LIBS) \
+	   $(LIBCURL_LIBS) \
 	   $(WAYLAND_LIBS) \
 	   $(X_EXTRA_LIBS) \
 	   $(MZSCHEME_LIBS) \
@@ -1396,8 +1397,7 @@ ALL_LIBS = \
 	   $(RUBY_LIBS) \
 	   $(PROFILE_LIBS) \
 	   $(SANITIZER_LIBS) \
-	   $(LEAK_LIBS) \
-	   -lcurl
+	   $(LEAK_LIBS)
 
 # abbreviations
 DEST_BIN = $(DESTDIR)$(BINDIR)

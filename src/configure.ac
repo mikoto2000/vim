@@ -2443,6 +2443,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 		   AC_MSG_RESULT(no))
 CPPFLAGS=$cppflags_save
 
+
 AC_MSG_CHECKING(--with-wayland argument)
 AC_ARG_WITH(wayland,
 	[  --with-wayland	  Include support for the Wayland protocol.],
@@ -4857,6 +4858,37 @@ AC_SUBST(LINK_AS_NEEDED)
 # IBM z/OS reset CFLAGS for config.mk
 if test "$zOSUnix" = "yes"; then
 	CFLAGS="-D_ALL_SOURCE -Wc,float\(ieee\),dll"
+fi
+
+AC_ARG_WITH([libcurl],
+  [AS_HELP_STRING([--with-libcurl], [Include support for the libcurl protocol])],
+  [with_libcurl=$withval],  dnl 明示指定時
+  [AS_IF([test "x$features" = "xtiny"], [with_libcurl=no], [with_libcurl=yes])])
+
+AC_MSG_CHECKING([--with-libcurl argument])
+AC_MSG_RESULT([$with_libcurl])
+
+if test "$with_libcurl" = yes; then
+cppflags_save=$CPPFLAGS
+cflags_save=$CFLAGS
+  AC_MSG_CHECKING(for libcurl)
+  if "$PKG_CONFIG" --exists 'libcurl'; then
+    AC_MSG_RESULT([yes])
+    AC_DEFINE([HAVE_LIBCURL], [1],[Define if libcurl is available])
+    LIBCURL_CPPFLAGS=`$PKG_CONFIG --cflags-only-I libcurl`
+    LIBCURL_CFLAGS=`$PKG_CONFIG --cflags-only-other libcurl`
+    CPPFLAGS="$CPPFLAGS $LIBCURL_CPPFLAGS"
+    CFLAGS="$CFLAGS $LIBCURL_CFLAGS"
+    LIBCURL_LIBS=`$PKG_CONFIG --libs libcurl`
+    AC_SUBST(LIBCURL_CPPFLAGS)
+    AC_SUBST(LIBCURL_CFLAGS)
+    AC_SUBST(LIBCURL_LIBS)
+  else
+    AC_MSG_RESULT(no)
+    with_libcurl=no
+  fi
+CPPFLAGS=$cppflags_save
+CFLAGS=$cflags_save
 fi
 
 dnl write output files

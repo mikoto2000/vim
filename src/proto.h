@@ -16,7 +16,9 @@
  */
 #if !defined(PROTO) && !defined(NOPROTO)
 
+#ifdef HAVE_LIBCURL
 #include <curl/curl.h>
+#endif
 
 /*
  * Machine-dependent routines.
