@@ -16503,6 +16503,7 @@ printf %s "checking for libcurl... " >&6; }
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 
+
 printf "%s\n" "#define HAVE_LIBCURL 1" >>confdefs.h
 
     LIBCURL_CPPFLAGS=`$PKG_CONFIG --cflags-only-I libcurl`
