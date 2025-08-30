@@ -85,7 +85,7 @@ static void f_haslocaldir(typval_T *argvars, typval_T *rettv);
 static void f_hlID(typval_T *argvars, typval_T *rettv);
 static void f_hlexists(typval_T *argvars, typval_T *rettv);
 static void f_hostname(typval_T *argvars, typval_T *rettv);
-static void f_httprequest(typval_T *argvars UNUSED, typval_T *rettv);
+static void f_httprequest(typval_T *argvars, typval_T *rettv);
 static void f_id(typval_T *argvars, typval_T *rettv);
 static void f_index(typval_T *argvars, typval_T *rettv);
 static void f_indexof(typval_T *argvars, typval_T *rettv);
@@ -1385,6 +1385,7 @@ static argcheck_T arg12_system[] = {arg_string, arg_str_or_nr_or_list};
 static argcheck_T arg23_win_execute[] = {arg_number, arg_string_or_list_string, arg_string};
 static argcheck_T arg23_writefile[] = {arg_list_or_blob, arg_string, arg_string};
 static argcheck_T arg24_match_func[] = {arg_string_or_list_any, arg_string, arg_number, arg_number};
+static argcheck_T arg4_httprequest[] = {arg_string, arg_string, arg_dict_any, arg_string};
 
 // Can be used by functions called through "f_retfunc" to create new types.
 static garray_T *current_type_gap = NULL;
@@ -2418,7 +2419,7 @@ static const funcentry_T global_functions[] =
 			ret_number_bool,    f_hlset},
     {"hostname",	0, 0, 0,	    NULL,
 			ret_string,	    f_hostname},
-    {"httprequest",	1, 1, FEARG_1,	    arg1_string,
+    {"httprequest",	3, 4, FEARG_1,	    arg4_httprequest,
 			ret_maparg,	    f_httprequest},
     {"iconv",		3, 3, FEARG_1,	    arg3_string,
 			ret_string,	    f_iconv},
@@ -12863,27 +12864,81 @@ static size_t header_callback(char *buffer, size_t size, size_t nitems, void *us
     static void
 f_httprequest(typval_T *argvars, typval_T *rettv)
 {
-    char_u *str;
+    char_u *method;
+    dict_T *request_headers_dict;
+    char_u *url;
+    char_u *body = NUL;
 
     if (rettv_dict_alloc(rettv) == FAIL)
 	return;
 
-    str = tv_get_string_chk(&argvars[0]);
+    method = tv_get_string_chk(&argvars[0]);
+    url = tv_get_string_chk(&argvars[1]);
+    request_headers_dict = argvars[2].vval.v_dict;
+    if (check_for_opt_string_arg(argvars, 3) != FAIL)
+    {
+	body = tv_get_string_chk(&argvars[3]);
+    } else {
+	body = vim_strsave((char_u *)"");
+    }
 
-    if (str != NULL && *str != NUL)
+    // リクエストヘッダ組み立て
+    hashitem_T *hi;
+    dictitem_T *di;
+    int todo;
+    struct curl_slist *request_headers = NULL;
+    if (request_headers_dict != NULL) {
+	todo = (int)request_headers_dict->dv_hashtab.ht_used;
+	for (hi = request_headers_dict->dv_hashtab.ht_array; todo > 0; ++hi) {
+	    if (!HASHITEM_EMPTY(hi)) {
+		di = HI2DI(hi);
+
+		char *key = (char *)di->di_key;
+		typval_T *tv = &di->di_tv;
+
+		if (tv->v_type == VAR_STRING && tv->vval.v_string != NULL) {
+		    char *val = (char *)tv->vval.v_string;
+
+		    // "Key: Value" 形式の文字列を作る
+		    size_t len = strlen(key) + 2 + strlen(val) + 1;
+		    char *header = malloc(len);
+		    snprintf(header, len, "%s: %s", key, val);
+
+		    request_headers = curl_slist_append(request_headers, header);
+
+		    free(header);
+		    todo--;
+		}
+	    }
+	}
+    }
+
+    if (url != NULL && *url != NUL)
     {
 	CURL *curl;
 	CURLcode res;
 
 	long http_code = 0;
-	dict_T *headers = dict_alloc();
+	dict_T *response_headers = dict_alloc();
 
 	struct Memory chunk = {0};
+	chunk.response = vim_strsave((char_u *)"");  // 最初から空文字を入れる
+	chunk.size = 0;
 
 	curl = curl_easy_init();
 	if(curl) {
-	    curl_easy_setopt(curl, CURLOPT_URL, str);
+	    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
+	    if (request_headers != NULL)
+	    {
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, request_headers);
+	    }
+	    curl_easy_setopt(curl, CURLOPT_URL, url);
 	    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+	    if (body != NULL && *body != NUL)
+	    {
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(body));
+	    }
 
 	    // リクエストボディ受信コールバック
 	    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
@@ -12891,15 +12946,18 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 
 	    // ヘッダー受信コールバック
 	    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
-	    curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void *)headers);
+	    curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void *)response_headers);
 
 	    // リクエスト送信
 	    res = curl_easy_perform(curl);
-	    if(res != CURLE_OK)
-	    {
-		fprintf(stderr, "curl_easy_perform() failed: %s\n",
-			curl_easy_strerror(res));
-		free(chunk.response);
+	    if (res != CURLE_OK) {
+		// 失敗時は body を空文字で返す（NULL は絶対に入れない）
+		dict_add_number(rettv->vval.v_dict, "code", 0);
+		dict_add_dict(rettv->vval.v_dict, "headers", response_headers);
+		dict_add_string(rettv->vval.v_dict, "body", vim_strsave((char_u *)""));
+		vim_free(chunk.response);
+		curl_easy_cleanup(curl);
+		return;
 	    }
 
 	    // ステータスコード取得
@@ -12911,7 +12969,7 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 	    dict_add_number(rettv->vval.v_dict, "code", http_code);
 
 	    // ヘッダー
-	    dict_add_dict(rettv->vval.v_dict, "headers", headers);
+	    dict_add_dict(rettv->vval.v_dict, "headers", response_headers);
 
 	    // レスポンスボディ
 	    dict_add_string(rettv->vval.v_dict, "body", vim_strsave(chunk.response));
