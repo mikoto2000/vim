@@ -85,6 +85,7 @@ static void f_haslocaldir(typval_T *argvars, typval_T *rettv);
 static void f_hlID(typval_T *argvars, typval_T *rettv);
 static void f_hlexists(typval_T *argvars, typval_T *rettv);
 static void f_hostname(typval_T *argvars, typval_T *rettv);
+static void f_httprequest(typval_T *argvars UNUSED, typval_T *rettv);
 static void f_id(typval_T *argvars, typval_T *rettv);
 static void f_index(typval_T *argvars, typval_T *rettv);
 static void f_indexof(typval_T *argvars, typval_T *rettv);
@@ -2417,6 +2418,8 @@ static const funcentry_T global_functions[] =
 			ret_number_bool,    f_hlset},
     {"hostname",	0, 0, 0,	    NULL,
 			ret_string,	    f_hostname},
+    {"httprequest",	1, 1, FEARG_1,	    arg1_string,
+			ret_maparg,	    f_httprequest},
     {"iconv",		3, 3, FEARG_1,	    arg3_string,
 			ret_string,	    f_iconv},
     {"id",		1, 1, FEARG_1,	    NULL,
@@ -12808,6 +12811,113 @@ f_xor(typval_T *argvars, typval_T *rettv)
 
     rettv->vval.v_number = tv_get_number_chk(&argvars[0], NULL)
 					^ tv_get_number_chk(&argvars[1], NULL);
+}
+
+struct Memory {
+    char *response;
+    size_t size;
+};
+
+static size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t realsize = size * nmemb;
+    struct Memory *mem = (struct Memory *)userp;
+
+    char *ptr = realloc(mem->response, mem->size + realsize + 1);
+    if(ptr == NULL) return 0; /* out of memory! */
+
+    mem->response = ptr;
+    memcpy(&(mem->response[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->response[mem->size] = 0;
+
+    return realsize;
+}
+
+static size_t header_callback(char *buffer, size_t size, size_t nitems, void *userdata) {
+    size_t realsize = size * nitems;
+    dict_T *dict = (dict_T *)userdata;
+
+    // ヘッダーは「Key: Value\r\n」形式
+    char *sep = memchr(buffer, ':', realsize);
+    if (sep) {
+	size_t key_len = sep - buffer;
+	size_t value_len = realsize - key_len - 2; // ": " を除去
+	while (value_len > 0 && (buffer[key_len + 1 + value_len - 1] == '\r' ||
+		    buffer[key_len + 1 + value_len - 1] == '\n')) {
+	    value_len--;
+	}
+
+	char *key = vim_strnsave((char_u *)buffer, (int)key_len);
+	char *val = vim_strnsave((char_u *)(sep + 2), (int)value_len);
+
+	// Vim の dict に追加
+	dict_add_string(dict, key, val);
+
+	vim_free(key);
+	vim_free(val);
+    }
+
+    return realsize;
+}
+
+    static void
+f_httprequest(typval_T *argvars, typval_T *rettv)
+{
+    char_u *str;
+
+    if (rettv_dict_alloc(rettv) == FAIL)
+	return;
+
+    str = tv_get_string_chk(&argvars[0]);
+
+    if (str != NULL && *str != NUL)
+    {
+	CURL *curl;
+	CURLcode res;
+
+	long http_code = 0;
+	dict_T *headers = dict_alloc();
+
+	struct Memory chunk = {0};
+
+	curl = curl_easy_init();
+	if(curl) {
+	    curl_easy_setopt(curl, CURLOPT_URL, str);
+	    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+	    // リクエストボディ受信コールバック
+	    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+	    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+
+	    // ヘッダー受信コールバック
+	    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
+	    curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void *)headers);
+
+	    // リクエスト送信
+	    res = curl_easy_perform(curl);
+	    if(res != CURLE_OK)
+	    {
+		fprintf(stderr, "curl_easy_perform() failed: %s\n",
+			curl_easy_strerror(res));
+		free(chunk.response);
+	    }
+
+	    // ステータスコード取得
+	    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+	    curl_easy_cleanup(curl);
+
+	    // ステータスコード
+	    dict_add_number(rettv->vval.v_dict, "code", http_code);
+
+	    // ヘッダー
+	    dict_add_dict(rettv->vval.v_dict, "headers", headers);
+
+	    // レスポンスボディ
+	    dict_add_string(rettv->vval.v_dict, "body", vim_strsave(chunk.response));
+	    free(chunk.response);
+	}
+    }
 }
 
 #endif // FEAT_EVAL

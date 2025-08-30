@@ -16,6 +16,8 @@
  */
 #if !defined(PROTO) && !defined(NOPROTO)
 
+#include <curl/curl.h>
+
 /*
  * Machine-dependent routines.
  */
