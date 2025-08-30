@@ -1417,7 +1417,8 @@ ALL_LIBS = \
 	   $(RUBY_LIBS) \
 	   $(PROFILE_LIBS) \
 	   $(SANITIZER_LIBS) \
-	   $(LEAK_LIBS)
+	   $(LEAK_LIBS) \
+	   -lcurl
 
 # abbreviations
 DEST_BIN = $(DESTDIR)$(BINDIR)
