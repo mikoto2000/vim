@@ -266,6 +266,11 @@ static char *(features[]) =
 	"-gettext",
 #endif
 	"-hangul_input",
+#ifdef FEAT_LIBCURL
+	"+httpclient",
+#else
+	"-httpclient",
+#endif
 #if (defined(HAVE_ICONV_H) && defined(USE_ICONV)) || defined(DYNAMIC_ICONV)
 # ifdef DYNAMIC_ICONV
 	"+iconv/dyn",
@@ -306,11 +311,6 @@ static char *(features[]) =
 	"+libcall",
 #else
 	"-libcall",
-#endif
-#ifdef FEAT_LIBCURL
-	"+libcurl",
-#else
-	"-libcurl",
 #endif
 #ifdef FEAT_LINEBREAK
 	"+linebreak",

@@ -13003,7 +13003,8 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 	    res = curl_easy_perform(curl);
 	    if (res != CURLE_OK) {
 		// 失敗時は body を空文字で返す（NULL は絶対に入れない）
-		dict_add_number(rettv->vval.v_dict, "code", 0);
+		dict_add_number(rettv->vval.v_dict, "success", 0);
+		dict_add_number(rettv->vval.v_dict, "status", 0);
 		dict_add_dict(rettv->vval.v_dict, "headers", response_headers);
 		dict_add_string(rettv->vval.v_dict, "body", vim_strsave((char_u *)""));
 		vim_free(chunk.response);
@@ -13016,8 +13017,10 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 
 	    curl_easy_cleanup(curl);
 
+	    dict_add_number(rettv->vval.v_dict, "success", 1);
+
 	    // ステータスコード
-	    dict_add_number(rettv->vval.v_dict, "code", http_code);
+	    dict_add_number(rettv->vval.v_dict, "status", http_code);
 
 	    // ヘッダー
 	    dict_add_dict(rettv->vval.v_dict, "headers", response_headers);
