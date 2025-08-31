@@ -19,6 +19,13 @@ struct Memory {
     size_t size;
 };
 
+static int xferinfo_cb(void *clientp UNUSED, curl_off_t dltotal UNUSED, curl_off_t dlnow UNUSED,
+                       curl_off_t ultotal UNUSED, curl_off_t ulnow UNUSED)
+{
+    ui_breakcheck();
+    return got_int ? 1 : 0;  // 非0→CURLE_ABORTED_BY_CALLBACK
+}
+
 static size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
     size_t realsize = size * nmemb;
     struct Memory *mem = (struct Memory *)userp;
@@ -186,6 +193,12 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(body));
 	    }
 
+
+	    // 進捗コールバック
+	    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+	    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, xferinfo_cb);
+	    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, NULL);
+
 	    // リクエストボディ受信コールバック
 	    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
 	    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
@@ -202,6 +215,7 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 		dict_add_number(rettv->vval.v_dict, "status", 0);
 		dict_add_dict(rettv->vval.v_dict, "headers", response_headers);
 		dict_add_string(rettv->vval.v_dict, "body", vim_strsave((char_u *)""));
+		if (request_headers) curl_slist_free_all(request_headers);
 		vim_free(chunk.response);
 		curl_easy_cleanup(curl);
 		return;
@@ -210,6 +224,7 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 	    // ステータスコード取得
 	    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
+	    if (request_headers) curl_slist_free_all(request_headers);
 	    curl_easy_cleanup(curl);
 
 	    // 成功フラグを立てる
