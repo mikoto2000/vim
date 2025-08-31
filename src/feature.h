@@ -821,6 +821,13 @@
 #endif
 
 /*
+ * +libcurl		Unix only.  Include code for the libcurl protocol,
+ *                      only works if HAVE_LIBCURL is defined.
+ */
+#ifdef HAVE_LIBCURL
+# define FEAT_LIBCURL
+#endif
+/*
  * XSMP - X11 Session Management Protocol
  * It may be preferred to disable this if the GUI supports it (e.g.,
  * GNOME/KDE) and implement save-yourself etc. through that, but it may also
