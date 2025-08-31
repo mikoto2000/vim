@@ -307,6 +307,11 @@ static char *(features[]) =
 #else
 	"-libcall",
 #endif
+#ifdef FEAT_LIBCURL
+	"+libcurl",
+#else
+	"-libcurl",
+#endif
 #ifdef FEAT_LINEBREAK
 	"+linebreak",
 #else

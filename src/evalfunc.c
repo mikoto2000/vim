@@ -12839,30 +12839,62 @@ static size_t write_callback(void *contents, size_t size, size_t nmemb, void *us
     return realsize;
 }
 
-static size_t header_callback(char *buffer, size_t size, size_t nitems, void *userdata) {
+static size_t header_callback(char *buffer, size_t size, size_t nitems, void *userdata)
+{
     size_t realsize = size * nitems;
     dict_T *dict = (dict_T *)userdata;
 
-    // ヘッダーは「Key: Value\r\n」形式
+    // "Key: Value\r\n" 形式
     char *sep = memchr(buffer, ':', realsize);
-    if (sep) {
-	size_t key_len = sep - buffer;
-	size_t value_len = realsize - key_len - 2; // ": " を除去
-	while (value_len > 0 && (buffer[key_len + 1 + value_len - 1] == '\r' ||
-		    buffer[key_len + 1 + value_len - 1] == '\n')) {
-	    value_len--;
-	}
+    if (!sep) return realsize;
 
-	char *key = vim_strnsave((char_u *)buffer, (int)key_len);
-	char *val = vim_strnsave((char_u *)(sep + 2), (int)value_len);
+    size_t key_len = (size_t)(sep - buffer);
+    size_t value_len = realsize - key_len - 1; // ':' を除いた長さ（この後で前後空白と CRLF を削る）
 
-	// Vim の dict に追加
-	dict_add_string(dict, key, val);
-
-	vim_free(key);
-	vim_free(val);
+    // 値の先頭/末尾トリム（": " や CRLF を除去）
+    char *val_start = sep + 1;
+    while (value_len > 0 && (*val_start == ' ' || *val_start == '\t')) {
+        val_start++; value_len--;
+    }
+    while (value_len > 0 && (val_start[value_len-1] == '\r' || val_start[value_len-1] == '\n')) {
+        value_len--;
     }
 
+    // key を小文字化して保存（HTTP は case-insensitive）
+    char_u *key = vim_strnsave((char_u *)buffer, (int)key_len);
+    for (int i = 0; i < (int)key_len; ++i) key[i] = (char_u)TOLOWER_ASC(key[i]);
+
+    // 値を Vim のメモリで確保
+    char_u *val = vim_strnsave((char_u *)val_start, (int)value_len);
+
+    // 既存エントリを探す
+    dictitem_T *di = dict_find(dict, key, (int)key_len);
+
+    if (di == NULL) {
+        // 初出 → 文字列で追加
+        dict_add_string(dict, key, val);
+    } else {
+        // 既に同名キーがある → リストに畳み込む
+        typval_T *tv = &di->di_tv;
+        if (tv->v_type != VAR_LIST) {
+            // 既存の文字列をリストへ昇格
+            list_T *l = list_alloc();
+            if (l != NULL) {
+                list_append_string(l, tv->vval.v_string, -1);  // 既存値
+                clear_tv(tv);
+                tv->v_type = VAR_LIST;
+                tv->vval.v_list = l;
+                l->lv_refcount++;
+            }
+        }
+        if (tv->v_type == VAR_LIST) {
+            list_append_string(tv->vval.v_list, val, -1);     // 新しい値を追加
+        }
+        // tv に取り込んだので val は解放不要（list_append_string が取り込む）
+        vim_free(val);
+    }
+
+    vim_free(key);
     return realsize;
 }
 
@@ -12892,27 +12924,41 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
     dictitem_T *di;
     int todo;
     struct curl_slist *request_headers = NULL;
+
     if (request_headers_dict != NULL) {
-	todo = (int)request_headers_dict->dv_hashtab.ht_used;
+	hashitem_T *hi;
+	dictitem_T *di;
+	int todo = (int)request_headers_dict->dv_hashtab.ht_used;
+
 	for (hi = request_headers_dict->dv_hashtab.ht_array; todo > 0; ++hi) {
 	    if (!HASHITEM_EMPTY(hi)) {
+		--todo;
 		di = HI2DI(hi);
 
 		char *key = (char *)di->di_key;
 		typval_T *tv = &di->di_tv;
 
 		if (tv->v_type == VAR_STRING && tv->vval.v_string != NULL) {
-		    char *val = (char *)tv->vval.v_string;
-
-		    // "Key: Value" 形式の文字列を作る
-		    size_t len = strlen(key) + 2 + strlen(val) + 1;
-		    char *header = malloc(len);
-		    snprintf(header, len, "%s: %s", key, val);
-
-		    request_headers = curl_slist_append(request_headers, header);
-
-		    free(header);
-		    todo--;
+		    /* 1 値 */
+		    size_t len = strlen(key) + 2 + strlen((char*)tv->vval.v_string) + 1;
+		    char *hdr = malloc(len);
+		    snprintf(hdr, len, "%s: %s", key, (char*)tv->vval.v_string);
+		    request_headers = curl_slist_append(request_headers, hdr);
+		    free(hdr);
+		} else if (tv->v_type == VAR_LIST && tv->vval.v_list != NULL) {
+		    /* 複数値 */
+		    for (listitem_T *li = tv->vval.v_list->lv_first; li; li = li->li_next) {
+			char_u *sv = tv_get_string_chk(&li->li_tv);
+			if (sv == NULL) continue;
+			size_t len = strlen(key) + 2 + strlen((char*)sv) + 1;
+			char *hdr = malloc(len);
+			snprintf(hdr, len, "%s: %s", key, (char*)sv);
+			request_headers = curl_slist_append(request_headers, hdr);
+			free(hdr);
+		    }
+		} else {
+		    semsg(_(e_invalid_argument_str),
+			    "header values must be string or list of string");  /* 値が文字列/リスト以外ならエラー */
 		}
 	    }
 	}
