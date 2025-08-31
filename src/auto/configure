@@ -648,6 +648,8 @@ ac_includes_default="\
 ac_header_c_list=
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+LIBCURL_OBJ
+LIBCURL_SRC
 LIBCURL_LIBS
 LIBCURL_CFLAGS
 LIBCURL_CPPFLAGS
@@ -16503,7 +16505,6 @@ printf %s "checking for libcurl... " >&6; }
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 
-
 printf "%s\n" "#define HAVE_LIBCURL 1" >>confdefs.h
 
     LIBCURL_CPPFLAGS=`$PKG_CONFIG --cflags-only-I libcurl`
@@ -16511,6 +16512,12 @@ printf "%s\n" "#define HAVE_LIBCURL 1" >>confdefs.h
     CPPFLAGS="$CPPFLAGS $LIBCURL_CPPFLAGS"
     CFLAGS="$CFLAGS $LIBCURL_CFLAGS"
     LIBCURL_LIBS=`$PKG_CONFIG --libs libcurl`
+    LIBCURL_SRC=" \
+      http.c"
+    LIBCURL_OBJ=" \
+      objects/http.o"
+
+
 
 
 

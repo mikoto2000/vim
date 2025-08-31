@@ -13017,6 +13017,7 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 
 	    curl_easy_cleanup(curl);
 
+	    // 成功フラグを立てる
 	    dict_add_number(rettv->vval.v_dict, "success", 1);
 
 	    // ステータスコード

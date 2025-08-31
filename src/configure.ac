@@ -4880,9 +4880,15 @@ cflags_save=$CFLAGS
     CPPFLAGS="$CPPFLAGS $LIBCURL_CPPFLAGS"
     CFLAGS="$CFLAGS $LIBCURL_CFLAGS"
     LIBCURL_LIBS=`$PKG_CONFIG --libs libcurl`
+    LIBCURL_SRC=" \
+      http.c"
+    LIBCURL_OBJ=" \
+      objects/http.o"
     AC_SUBST(LIBCURL_CPPFLAGS)
     AC_SUBST(LIBCURL_CFLAGS)
     AC_SUBST(LIBCURL_LIBS)
+    AC_SUBST(LIBCURL_SRC)
+    AC_SUBST(LIBCURL_OBJ)
   else
     AC_MSG_RESULT(no)
     with_libcurl=no
