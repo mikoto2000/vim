@@ -526,4 +526,4 @@
 /* Define if you want to load libgpm dynamically */
 #undef DYNAMIC_GPM
 
-#undef HAVE_LIBCURL
+#undef HAVE_HTTP

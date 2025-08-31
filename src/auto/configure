@@ -648,11 +648,11 @@ ac_includes_default="\
 ac_header_c_list=
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-LIBCURL_OBJ
-LIBCURL_SRC
-LIBCURL_LIBS
-LIBCURL_CFLAGS
-LIBCURL_CPPFLAGS
+HTTP_OBJ
+HTTP_SRC
+HTTP_LIBS
+HTTP_CFLAGS
+HTTP_CPPFLAGS
 LINK_AS_NEEDED
 DEPEND_CFLAGS_FILTER
 MSGFMTCMD
@@ -891,7 +891,7 @@ enable_acl
 enable_gpm
 enable_sysmouse
 enable_nls
-with_libcurl
+with_http
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1601,7 +1601,7 @@ Optional Packages:
   --with-gnome            Specify prefix for GNOME files
   --with-motif-lib=STRING Library for Motif
   --with-tlib=library     terminal library to be used
-  --with-libcurl          Include support for the libcurl protocol
+  --with-http             Include support for the http protocol
 
 Some influential environment variables:
   CC          C compiler command
@@ -16477,44 +16477,44 @@ if test "$zOSUnix" = "yes"; then
 fi
 
 
-# Check whether --with-libcurl was given.
-if test ${with_libcurl+y}
+# Check whether --with-http was given.
+if test ${with_http+y}
 then :
-  withval=$with_libcurl; with_libcurl=$withval
+  withval=$with_http; with_http=$withval
 else $as_nop
     if test "x$features" = "xtiny"
 then :
-  with_libcurl=no
+  with_http=no
 else $as_nop
-  with_libcurl=yes
+  with_http=yes
 fi
 fi
 
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking --with-libcurl argument" >&5
-printf %s "checking --with-libcurl argument... " >&6; }
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $with_libcurl" >&5
-printf "%s\n" "$with_libcurl" >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking --with-http argument" >&5
+printf %s "checking --with-http argument... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $with_http" >&5
+printf "%s\n" "$with_http" >&6; }
 
-if test "$with_libcurl" = yes; then
+if test "$with_http" = yes; then
 cppflags_save=$CPPFLAGS
 cflags_save=$CFLAGS
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libcurl" >&5
-printf %s "checking for libcurl... " >&6; }
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for http" >&5
+printf %s "checking for http... " >&6; }
   if "$PKG_CONFIG" --exists 'libcurl'; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 
-printf "%s\n" "#define HAVE_LIBCURL 1" >>confdefs.h
+printf "%s\n" "#define HAVE_HTTP 1" >>confdefs.h
 
-    LIBCURL_CPPFLAGS=`$PKG_CONFIG --cflags-only-I libcurl`
-    LIBCURL_CFLAGS=`$PKG_CONFIG --cflags-only-other libcurl`
-    CPPFLAGS="$CPPFLAGS $LIBCURL_CPPFLAGS"
-    CFLAGS="$CFLAGS $LIBCURL_CFLAGS"
-    LIBCURL_LIBS=`$PKG_CONFIG --libs libcurl`
-    LIBCURL_SRC=" \
+    HTTP_CPPFLAGS=`$PKG_CONFIG --cflags-only-I libcurl`
+    HTTP_CFLAGS=`$PKG_CONFIG --cflags-only-other libcurl`
+    CPPFLAGS="$CPPFLAGS $HTTP_CPPFLAGS"
+    CFLAGS="$CFLAGS $HTTP_CFLAGS"
+    HTTP_LIBS=`$PKG_CONFIG --libs libcurl`
+    HTTP_SRC=" \
       http.c"
-    LIBCURL_OBJ=" \
+    HTTP_OBJ=" \
       objects/http.o"
 
 
@@ -16524,7 +16524,7 @@ printf "%s\n" "#define HAVE_LIBCURL 1" >>confdefs.h
   else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-    with_libcurl=no
+    with_http=no
   fi
 CPPFLAGS=$cppflags_save
 CFLAGS=$cflags_save

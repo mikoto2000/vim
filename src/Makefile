@@ -1383,7 +1383,7 @@ ALL_LIBS = \
 	   $(GUI_LIBS2) \
 	   $(X_PRE_LIBS) \
 	   $(X_LIBS) \
-	   $(LIBCURL_LIBS) \
+	   $(HTTP_LIBS) \
 	   $(WAYLAND_LIBS) \
 	   $(X_EXTRA_LIBS) \
 	   $(MZSCHEME_LIBS) \
@@ -1601,6 +1601,7 @@ SRC =	$(BASIC_SRC) \
 	$(PYTHON_SRC) $(PYTHON3_SRC) \
 	$(TCL_SRC) \
 	$(RUBY_SRC) \
+	$(HTTP_SRC) \
 	$(WAYLAND_SRC)
 
 EXTRA_SRC = if_lua.c if_mzsch.c auto/if_perl.c \
@@ -1779,6 +1780,7 @@ OBJ_COMMON = \
 	$(NETBEANS_OBJ) \
 	$(CHANNEL_OBJ) \
 	$(XDIFF_OBJS_USED) \
+	$(HTTP_OBJ) \
 	$(WAYLAND_OBJ)
 
 # The files included by tests are not in OBJ_COMMON.
@@ -1883,6 +1885,7 @@ PROTO_FILES = \
 	proto/hashtab.pro \
 	proto/help.pro \
 	proto/highlight.pro \
+	proto/http.pro \
 	proto/if_cscope.pro \
 	proto/if_lua.pro \
 	proto/if_mzsch.pro \
@@ -3381,6 +3384,9 @@ objects/gui_photon.o: gui_photon.c
 objects/highlight.o: highlight.c
 	$(CCC) -o $@ highlight.c
 
+objects/http.o: http.c
+	$(CCC) -o $@ http.c
+
 objects/if_cscope.o: if_cscope.c
 	$(CCC) -o $@ if_cscope.c
 
@@ -4040,6 +4046,14 @@ objects/highlight.o: auto/osdef.h highlight.c vim.h protodef.h auto/config.h fea
 objects/if_cscope.o: auto/osdef.h if_cscope.c vim.h protodef.h auto/config.h feature.h \
  os_unix.h ascii.h keymap.h termdefs.h macros.h option.h \
  beval.h structs.h regexp.h gui.h \
+objects/http.o: http.c vim.h protodef.h auto/config.h feature.h \
+ os_unix.h auto/osdef.h ascii.h keymap.h termdefs.h macros.h option.h \
+ beval.h proto/gui_beval.pro structs.h regexp.h gui.h \
+ libvterm/include/vterm.h libvterm/include/vterm_keycodes.h alloc.h \
+ ex_cmds.h spell.h proto.h globals.h errors.h
+objects/if_cscope.o: if_cscope.c vim.h protodef.h auto/config.h feature.h \
+ os_unix.h auto/osdef.h ascii.h keymap.h termdefs.h macros.h option.h \
+ beval.h proto/gui_beval.pro structs.h regexp.h gui.h \
  libvterm/include/vterm.h libvterm/include/vterm_keycodes.h alloc.h \
  ex_cmds.h spell.h proto.h globals.h errors.h
 objects/if_xcmdsrv.o: auto/osdef.h if_xcmdsrv.c vim.h protodef.h auto/config.h feature.h \

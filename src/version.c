@@ -266,10 +266,10 @@ static char *(features[]) =
 	"-gettext",
 #endif
 	"-hangul_input",
-#ifdef FEAT_LIBCURL
-	"+httpclient",
+#ifdef FEAT_HTTP
+	"+http",
 #else
-	"-httpclient",
+	"-http",
 #endif
 #if (defined(HAVE_ICONV_H) && defined(USE_ICONV)) || defined(DYNAMIC_ICONV)
 # ifdef DYNAMIC_ICONV

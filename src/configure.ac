@@ -4860,38 +4860,38 @@ if test "$zOSUnix" = "yes"; then
 	CFLAGS="-D_ALL_SOURCE -Wc,float\(ieee\),dll"
 fi
 
-AC_ARG_WITH([libcurl],
-  [AS_HELP_STRING([--with-libcurl], [Include support for the libcurl protocol])],
-  [with_libcurl=$withval],  dnl 明示指定時
-  [AS_IF([test "x$features" = "xtiny"], [with_libcurl=no], [with_libcurl=yes])])
+AC_ARG_WITH([http],
+  [AS_HELP_STRING([--with-http], [Include support for the http protocol])],
+  [with_http=$withval],  dnl 明示指定時
+  [AS_IF([test "x$features" = "xtiny"], [with_http=no], [with_http=yes])])
 
-AC_MSG_CHECKING([--with-libcurl argument])
-AC_MSG_RESULT([$with_libcurl])
+AC_MSG_CHECKING([--with-http argument])
+AC_MSG_RESULT([$with_http])
 
-if test "$with_libcurl" = yes; then
+if test "$with_http" = yes; then
 cppflags_save=$CPPFLAGS
 cflags_save=$CFLAGS
-  AC_MSG_CHECKING(for libcurl)
+  AC_MSG_CHECKING(for http)
   if "$PKG_CONFIG" --exists 'libcurl'; then
     AC_MSG_RESULT([yes])
-    AC_DEFINE([HAVE_LIBCURL], [1],[Define if libcurl is available])
-    LIBCURL_CPPFLAGS=`$PKG_CONFIG --cflags-only-I libcurl`
-    LIBCURL_CFLAGS=`$PKG_CONFIG --cflags-only-other libcurl`
-    CPPFLAGS="$CPPFLAGS $LIBCURL_CPPFLAGS"
-    CFLAGS="$CFLAGS $LIBCURL_CFLAGS"
-    LIBCURL_LIBS=`$PKG_CONFIG --libs libcurl`
-    LIBCURL_SRC=" \
+    AC_DEFINE([HAVE_HTTP], [1],[Define if libcurl is available])
+    HTTP_CPPFLAGS=`$PKG_CONFIG --cflags-only-I libcurl`
+    HTTP_CFLAGS=`$PKG_CONFIG --cflags-only-other libcurl`
+    CPPFLAGS="$CPPFLAGS $HTTP_CPPFLAGS"
+    CFLAGS="$CFLAGS $HTTP_CFLAGS"
+    HTTP_LIBS=`$PKG_CONFIG --libs libcurl`
+    HTTP_SRC=" \
       http.c"
-    LIBCURL_OBJ=" \
+    HTTP_OBJ=" \
       objects/http.o"
-    AC_SUBST(LIBCURL_CPPFLAGS)
-    AC_SUBST(LIBCURL_CFLAGS)
-    AC_SUBST(LIBCURL_LIBS)
-    AC_SUBST(LIBCURL_SRC)
-    AC_SUBST(LIBCURL_OBJ)
+    AC_SUBST(HTTP_CPPFLAGS)
+    AC_SUBST(HTTP_CFLAGS)
+    AC_SUBST(HTTP_LIBS)
+    AC_SUBST(HTTP_SRC)
+    AC_SUBST(HTTP_OBJ)
   else
     AC_MSG_RESULT(no)
-    with_libcurl=no
+    with_http=no
   fi
 CPPFLAGS=$cppflags_save
 CFLAGS=$cflags_save
