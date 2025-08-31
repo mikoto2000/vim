@@ -103,6 +103,16 @@ static size_t header_callback(char *buffer, size_t size, size_t nitems, void *us
     void
 f_httprequest(typval_T *argvars, typval_T *rettv)
 {
+
+    if (in_vim9script()
+	    && (
+		check_for_string_arg(argvars, 0) != FAIL
+		|| check_for_string_arg(argvars, 1) != FAIL
+		|| check_for_dict_arg(argvars, 2) != FAIL
+		|| check_for_opt_string_arg(argvars, 3) != FAIL
+	       ))
+	    return;
+
     char_u *method;
     dict_T *request_headers_dict;
     char_u *url;
@@ -114,12 +124,8 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
     method = tv_get_string_chk(&argvars[0]);
     url = tv_get_string_chk(&argvars[1]);
     request_headers_dict = argvars[2].vval.v_dict;
-    if (check_for_opt_string_arg(argvars, 3) != FAIL)
-    {
+    if (argvars[3].v_type != VAR_UNKNOWN)
 	body = tv_get_string_chk(&argvars[3]);
-    } else {
-	body = vim_strsave((char_u *)"");
-    }
 
     // リクエストヘッダ組み立て
     hashitem_T *hi;
@@ -187,7 +193,7 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 	    }
 	    curl_easy_setopt(curl, CURLOPT_URL, url);
 	    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	    if (body != NULL && *body != NUL)
+	    if (argvars[3].v_type != VAR_UNKNOWN)
 	    {
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(body));
