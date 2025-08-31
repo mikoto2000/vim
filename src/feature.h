@@ -821,11 +821,11 @@
 #endif
 
 /*
- * +libcurl		Unix only.  Include code for the libcurl protocol,
- *                      only works if HAVE_LIBCURL is defined.
+ * +http		Unix only.  Include code for the HTTP protocol,
+ *                      only works if HAVE_HTTP is defined.
  */
-#ifdef HAVE_LIBCURL
-# define FEAT_LIBCURL
+#ifdef HAVE_HTTP
+# define FEAT_HTTP
 #endif
 /*
  * XSMP - X11 Session Management Protocol

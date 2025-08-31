@@ -1404,7 +1404,7 @@ ALL_LIBS = \
 	   $(GUI_LIBS2) \
 	   $(X_PRE_LIBS) \
 	   $(X_LIBS) \
-	   $(LIBCURL_LIBS) \
+	   $(HTTP_LIBS) \
 	   $(WAYLAND_LIBS) \
 	   $(X_EXTRA_LIBS) \
 	   $(MZSCHEME_LIBS) \
@@ -1619,6 +1619,7 @@ SRC =	$(BASIC_SRC) \
 	$(PYTHON_SRC) $(PYTHON3_SRC) \
 	$(TCL_SRC) \
 	$(RUBY_SRC) \
+	$(HTTP_SRC) \
 	$(WAYLAND_SRC)
 
 EXTRA_SRC = if_lua.c if_mzsch.c auto/if_perl.c if_perlsfio.c \
@@ -1795,6 +1796,7 @@ OBJ_COMMON = \
 	$(NETBEANS_OBJ) \
 	$(CHANNEL_OBJ) \
 	$(XDIFF_OBJS_USED) \
+	$(HTTP_OBJ) \
 	$(WAYLAND_OBJ)
 
 # The files included by tests are not in OBJ_COMMON.
@@ -1898,6 +1900,7 @@ PRO_AUTO = \
 	hashtab.pro \
 	help.pro \
 	highlight.pro \
+	http.pro \
 	if_cscope.pro \
 	if_lua.pro \
 	if_mzsch.pro \
@@ -3376,6 +3379,9 @@ objects/gui_photon.o: gui_photon.c
 objects/highlight.o: highlight.c
 	$(CCC) -o $@ highlight.c
 
+objects/http.o: http.c
+	$(CCC) -o $@ http.c
+
 objects/if_cscope.o: if_cscope.c
 	$(CCC) -o $@ if_cscope.c
 
@@ -4035,6 +4041,11 @@ objects/highlight.o: highlight.c vim.h protodef.h auto/config.h feature.h \
  beval.h proto/gui_beval.pro structs.h regexp.h gui.h \
  libvterm/include/vterm.h libvterm/include/vterm_keycodes.h alloc.h \
  ex_cmds.h spell.h proto.h globals.h errors.h
+objects/http.o: http.c vim.h protodef.h auto/config.h feature.h \
+ os_unix.h auto/osdef.h ascii.h keymap.h termdefs.h macros.h option.h \
+ beval.h proto/gui_beval.pro structs.h regexp.h gui.h \
+ libvterm/include/vterm.h libvterm/include/vterm_keycodes.h alloc.h \
+ ex_cmds.h spell.h proto.h globals.h errors.h
 objects/if_cscope.o: if_cscope.c vim.h protodef.h auto/config.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h termdefs.h macros.h option.h \
  beval.h proto/gui_beval.pro structs.h regexp.h gui.h \
@@ -4660,3 +4671,4 @@ objects/xpatience.o: xdiff/xpatience.c xdiff/xinclude.h auto/config.h \
  ex_cmds.h spell.h proto.h globals.h \
  errors.h xdiff/xtypes.h xdiff/xutils.h xdiff/xprepare.h \
  xdiff/xdiffi.h xdiff/xemit.h
+

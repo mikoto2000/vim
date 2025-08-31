@@ -16,7 +16,7 @@
  */
 #if !defined(PROTO) && !defined(NOPROTO)
 
-#ifdef HAVE_LIBCURL
+#ifdef HAVE_HTTP
 #include <curl/curl.h>
 #endif
 
@@ -105,6 +105,7 @@ extern int _stricoll(char *a, char *b);
 # include "hashtab.pro"
 # include "help.pro"
 # include "highlight.pro"
+# include "http.pro"
 # include "indent.pro"
 # include "insexpand.pro"
 # include "json.pro"

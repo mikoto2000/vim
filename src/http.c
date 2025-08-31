@@ -7,14 +7,13 @@
  * See README.txt for an overview of the Vim source code.
  */
 
+#include "vim.h"
+
 /*
  * http.c: http functions
  */
-#include "vim.h"
+#ifdef HAVE_HTTP
 
-#if defined(FEAT_EVAL) || defined(PROTO)
-
-#ifdef HAVE_LIBCURL
 struct Memory {
     char *response;
     size_t size;
@@ -94,7 +93,7 @@ static size_t header_callback(char *buffer, size_t size, size_t nitems, void *us
     return realsize;
 }
 
-    static void
+    void
 f_httprequest(typval_T *argvars, typval_T *rettv)
 {
     char_u *method;
@@ -228,6 +227,4 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 	}
     }
 }
-#endif // HAVE_LIBCURL
-
-#endif // FEAT_EVAL
+#endif // HAVE_HTTP
