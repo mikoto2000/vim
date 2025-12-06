@@ -330,6 +330,8 @@ hlexists({name})		Number	|TRUE| if highlight group {name} exists
 hlget([{name} [, {resolve}]])	List	get highlight group attributes
 hlset({list})			Number	set highlight group attributes
 hostname()			String	name of the machine Vim is running on
+httprequest({method}, {url}, {headers} [, {body}])
+				Dict	send an HTTP request (|+http|)
 iconv({expr}, {from}, {to})	String	convert encoding of {expr}
 id({item})			String	get unique identity string of item
 indent({lnum})			Number	indent of line {lnum}
@@ -5955,6 +5957,34 @@ hostname()						*hostname()*
 		256 characters long are truncated.
 
 		Return type: |String|
+
+
+httprequest({method}, {url}, {headers} [, {body}])	*httprequest()*
+		Send an HTTP request using {method} to {url}.  {method} and
+		{url} must be String values.  {headers}
+		must be a |Dictionary| mapping header names to a String value
+		or a |List| of String values; use v:null when no headers are
+		needed.  {body} is an optional request payload string, it
+		defaults to an empty string.
+
+		The returned |Dictionary| contains:
+			success	|TRUE| when the request finishes without an
+				error; otherwise |FALSE|
+			status	HTTP status code number, zero on failure
+			headers	Response headers as a Dictionary with
+				lowercase keys; when a header appears more
+				than once its value is a List
+			body	Response body as a String (empty on failure)
+
+		Requires the |+http| feature.
+
+		Can also be used as a |method|: >
+			" Add a JSON header and POST some text
+			{}->httprequest('POST', 'https://example.com/api',
+				\ #{'content-type': 'application/json'},
+				\ '{"name":"vim"}')
+<
+		Return type: dict<any>
 
 
 iconv({string}, {from}, {to})				*iconv()*
@@ -13177,6 +13207,7 @@ gui_win32s		idem, and Win32s system being used (Windows 3.1)
 haiku			Haiku version of Vim.
 hangul_input		Compiled with Hangul input support. |hangul|
 hpux			HP-UX version of Vim.
+http			Compiled with HTTP client support |httprequest()|.
 hurd			GNU/Hurd version of Vim
 iconv			Can use iconv() for conversion.
 insert_expand		Compiled with support for CTRL-X expansion commands in

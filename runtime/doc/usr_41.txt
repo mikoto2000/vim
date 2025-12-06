@@ -1044,6 +1044,7 @@ System functions and manipulation of files:
 	getenv()		get one environment variable
 	setenv()		set an environment variable
 	hostname()		name of the system
+	httprequest()		send an HTTP request
 	readfile()		read a file into a List of lines
 	readblob()		read a file into a Blob
 	readdir()		get a List of file names in a directory
