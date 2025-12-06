@@ -125,12 +125,16 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 	semsg(_(e_dict_required_for_argument_nr), 3);
 	return;
     }
-    if (check_for_opt_string_arg(argvars, 3) != FAIL)
+    if (argvars[3].v_type != VAR_UNKNOWN)
     {
+	if (check_for_string_arg(argvars, 3) == FAIL)
+	    return;
 	body = tv_get_string_chk(&argvars[3]);
-    } else {
-	body = vim_strsave((char_u *)"");
+	if (body == NULL)
+	    return;
     }
+    else
+	body = vim_strsave((char_u *)"");
 
     // リクエストヘッダ組み立て
     hashitem_T *hi;
