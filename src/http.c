@@ -104,7 +104,7 @@ static size_t header_callback(char *buffer, size_t size, size_t nitems, void *us
 f_httprequest(typval_T *argvars, typval_T *rettv)
 {
     char_u *method;
-    dict_T *request_headers_dict;
+    dict_T *request_headers_dict = NULL;
     char_u *url;
     char_u *body = NUL;
 
@@ -113,7 +113,18 @@ f_httprequest(typval_T *argvars, typval_T *rettv)
 
     method = tv_get_string_chk(&argvars[0]);
     url = tv_get_string_chk(&argvars[1]);
-    request_headers_dict = argvars[2].vval.v_dict;
+    if (method == NULL || url == NULL)
+	return;
+    if (argvars[2].v_type == VAR_DICT)
+	request_headers_dict = argvars[2].vval.v_dict;
+    else if (argvars[2].v_type == VAR_SPECIAL
+	    && argvars[2].vval.v_number == VVAL_NULL)
+	request_headers_dict = NULL; // v:null → ヘッダーなし扱い
+    else
+    {
+	semsg(_(e_dict_required_for_argument_nr), 3);
+	return;
+    }
     if (check_for_opt_string_arg(argvars, 3) != FAIL)
     {
 	body = tv_get_string_chk(&argvars[3]);
